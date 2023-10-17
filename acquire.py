@@ -34,137 +34,124 @@ def get_db_url(db, user=env.user, host=env.host, password=env.password):
     return f'mysql+pymysql://{user}:{password}@{host}/{db}'
 
 #---------------------------------------------------------------------------#
-
-def new_titanic_data(sql_query):
-    """
-    This function will:
-    - take in a sql_query
-    - create a connection url
-    - return a df of the given query from the databse  
-    """
-    # create the connection url:
-    url = get_db_url('titanic_db')
+# Titanic Data Set:
+def new_titanic_data():
+    '''
+    This function reads the titanic data from the Codeup db into a df.
+    '''
+    # Create SQL query.
+    sql_query = 'SELECT * FROM passengers'
     
-    return pd.read_sql(sql_query, url)
-
-
-
-def get_titanic_data(SQL_query, filename="titanic.csv"):
-    """
-    This function will:
-    - Check loacal directory for csv file
-        - return df if file exists
-        - If csv doesn't exist:
-            - create a df of the sql query
-            - write the df to a csv file
-    - output titanic df
-    """
+    # Read in DataFrame from Codeup db.
+    df = pd.read_sql(sql_query, get_db_url('titanic_db'))
     
-    directory = (f'{os.getcwd()}/')
-    
-    # checks if csv exists
-    if os.path.exists(directory + filename):
-        #if YES
-        df = pd.read_csv(filename)
-        return df
-    #if NO
-    else:
-        #obtaning new data from sql
-        df = new_titanic_data(SQL_query)
+    return df
+
+def get_titanic_data():
+    '''
+    This function reads in titanic data from Codeup database, writes data to
+    a csv file if a local file does not exist, and returns a df.
+    '''
+    if os.path.isfile('titanic_df.csv'):
         
-        #convert to a csv
-        df.to_csv(filename)
-        return df 
-
+        # If csv file exists, read in data from csv file.
+        df = pd.read_csv('titanic_df.csv', index_col=0)
+        
+    else:
+        
+        # Read fresh data from db into a DataFrame.
+        df = new_titanic_data()
+        
+        # Write DataFrame to a csv file.
+        df.to_csv('titanic_df.csv')
+        
+    return df   
+    
     
 #---------------------------------------------------------------------------#
-
-# This function will create the dataframe. 
-def new_iris_data(sql_query):
-    """
-    This function will:
-    - (This function will create the dataframe) 
-    - take in a sql_query
-    - create a connection url
-    - return a df of the given query from the databse  
-    """
-    # create the connection url:
-    url = get_db_url('iris_db')
+def new_iris_data():
+    '''
+    This function reads the iris data from the Codeup db into a df.
+    '''
+    iris_query = """
+                SELECT 
+                    species_id,
+                    species_name,
+                    sepal_length,
+                    sepal_width,
+                    petal_length,
+                    petal_width
+                FROM measurements
+                JOIN species USING(species_id)
+                """
     
-    return pd.read_sql(sql_query, url)
-
-# This function will save the dataframe into a csv. If on already exists it will pull the old csv. 
-def get_iris_data(SQL_query, filename="iris_db.csv"):
-    """
-    This function will:
-    - (This function will save the dataframe into a csv. If on already exists it will pull the old csv.)
-    - take in an SQL_query
-    - Check local directory for csv file
-        - return df if file exists
-        - If csv doesn't exist:
-            - create a df of the sql query
-            - write the df to a csv file
-    - output iris df
-    """
-    directory = (f'{os.getcwd()}/')
+    # Read in DataFrame from Codeup db.
+    df = pd.read_sql(iris_query, get_db_url('iris_db'))
     
-    # checks if csv exists
-    if os.path.exists(directory + filename):
-        #if YES
-        df = pd.read_csv(filename)
-        return df
-    #if NO
+    return df
+
+
+
+
+def get_iris_data():
+    '''
+    This function reads in iris data from Codeup database, writes data to
+    a csv file if a local file does not exist, and returns a df.
+    '''
+    if os.path.isfile('iris_df.csv'):
+        
+        # If csv file exists read in data from csv file.
+        df = pd.read_csv('iris_df.csv', index_col=0)
+        
     else:
-        #obtaning new data from sql
-        df = new_iris_data(Sql_query)
-        #convert to a csv
-        df.to_csv(filename)
-        return df
+        
+        # Read fresh data from db into a DataFrame
+        df = new_iris_data()
+        
+        # Cache data
+        df.to_csv('iris_df.csv')
+        
+    return df
     
 #---------------------------------------------------------------------------# 
+# Telco Data Set:    
     
+def new_telco_data():
+    '''
+    This function reads the telco data from the Codeup db into a df.
+    '''
+    telco_query = """
+                select * from customers
+                join contract_types using (contract_type_id)
+                join internet_service_types using (internet_service_type_id)
+                join payment_types using (payment_type_id)
+                """
     
-def new_telco_data(sql_query):
-    """
-    This function will:
-    - take in a sql_query
-    - create a connection url
-    - return a df of the given query from the databse  
-    """
-    # create the connection url:
-    url = get_db_url('telco_churn')
-    return pd.read_sql(sql_query, url) 
+    # Read in DataFrame from Codeup db.
+    df = pd.read_sql(telco_query, get_db_url('telco_churn'))
     
-    
-def get_telco_data(SQL_query, filename="telco_churn.csv"):
-    """
-    This function will:
-    - take in an SQL_query
-    - Check loacal directory for csv file
-        - return df if file exists
-        - If csv doesn't exist:
-            - create a df of the sql query
-            - write the df to a csv file
-    - output telcho churn df
-    """
-    directory = (f'{os.getcwd()}/')
-    
-    # checks if csv exists
-    if os.path.exists(directory + filename):
-        #if YES
-        df = pd.read_csv(filename)
-        return df
-    #if NO
-    else:
-        #obtaning new data from sql
-        df = new_telco_data(SQL_query)
-        
-        #convert to a csv
-        df.to_csv(filename)
-        return df      
-    
+    return df
 
-    
+def get_telco_data():
+    '''
+    This function reads in telco data from Codeup database, writes data to
+    a csv file if a local file does not exist, and returns a df.
+    '''
+    if os.path.isfile('telco.csv'):
+        
+        # If csv file exists read in data from csv file.
+        df = pd.read_csv('telco.csv', index_col=0)
+        
+    else:
+        
+        # Read fresh data from db into a DataFrame
+        df = new_telco_data()
+        
+        # Cache data
+        df.to_csv('telco.csv')
+        
+    return df
+
     
     
 #script
