@@ -64,7 +64,7 @@ def get_titanic_data():
         df = new_titanic_data()
         
         # Write DataFrame to a csv file.
-        df.to_csv('titanic_df.csv')
+        df.to_csv('titanic.csv')
         
     return df   
     
@@ -138,10 +138,10 @@ def get_telco_data():
     This function reads in telco data from Codeup database, writes data to
     a csv file if a local file does not exist, and returns a df.
     '''
-    if os.path.isfile('telco.csv'):
+    if os.path.isfile('telco_churn.csv'):
         
         # If csv file exists read in data from csv file.
-        df = pd.read_csv('telco.csv', index_col=0)
+        df = pd.read_csv('telco_churn.csv', index_col=0)
         
     else:
         
@@ -149,7 +149,7 @@ def get_telco_data():
         df = new_telco_data()
         
         # Cache data
-        df.to_csv('telco.csv')
+        df.to_csv('telco_chrun.csv')
         
     return df
 
