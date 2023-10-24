@@ -180,7 +180,7 @@ def prep_titanic_data(df):
 
 
 # another prep
-def prep_titanic(titanic) -> pd.DataFrame:
+def prep_titanic_2(titanic) -> pd.DataFrame:
     '''
     prep_titanic will take in a single pandas DataFrame, titanic
     as expected from the acquire.py return of get_titanic_data
@@ -188,7 +188,6 @@ def prep_titanic(titanic) -> pd.DataFrame:
     of this titanic data, ready for analysis.
     '''
     titanic = titanic.drop(columns=[
-        'Unnamed: 0',
         'passenger_id',
         'embarked',
         'deck',
