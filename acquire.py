@@ -4,14 +4,6 @@
 import numpy as np
 import pandas as pd
 
-#stats and plotting
-from pydataset import data
-import scipy.stats as stats
-import matplotlib.pyplot as plt
-import seaborn as sns
-from math import sqrt
-from sklearn.model_selection import train_test_split
-
 # core imports
 import env
 import os
@@ -38,7 +30,7 @@ def get_db_url(db, user=env.user, host=env.host, password=env.password):
 # Titanic Data Set:
 def new_titanic_data():
     '''
-    This function reads the titanic data from the Codeup db into a df.
+    This function takes in an SQL query and returns a dataframe from titanic
     '''
     # Create SQL query.
     sql_query = 'SELECT * FROM passengers'
@@ -53,10 +45,10 @@ def get_titanic_data():
     This function reads in titanic data from Codeup database, writes data to
     a csv file if a local file does not exist, and returns a df.
     '''
-    if os.path.isfile('titanic_df.csv'):
+    if os.path.isfile('titanic.csv'):
         
         # If csv file exists, read in data from csv file.
-        df = pd.read_csv('titanic_df.csv', index_col=0)
+        df = pd.read_csv('titanic.csv', index_col=0)
         
     else:
         

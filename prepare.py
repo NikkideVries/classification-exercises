@@ -18,96 +18,169 @@ from sklearn.impute import SimpleImputer
 
 
 
-
 #----------------------------------------------------------------------------------------------#
 # Iris Data:
 
-# clean_iris data:
-
+# function to clean
 def clean_iris(df):
-    """
-    clean_iris will take an acquired df and 
-    remove `species_id` and `measurement_id` columns and 
-    rename `species_name` column to just `species` and
-    encode 'species_name' column into TWO new columns
+    '''
+    This function will take in an iris.csv database.
+    - it will drop column: species id
+    - rename species_name to species
+    - create dummy columns
+    '''
     
-    return: single cleaned dataframe
-    """
+    # drop column using .drop(columns=column_name)
+    df = df.drop(columns='species_id')
     
-    # drops the columns we don't want
-    dropcols = ['species_id']
-    df.drop(columns= dropcols, inplace=True)
-    # renames the species_name to species
-    df.rename(columns={'species_name': 'species'}, inplace=True)
-    # creates a dummy column: assign numbered values to species
-    dummy_sp = pd.get_dummies(df[['species']], drop_first=True)
+    # remame column using .rename(columns={current_column_name : replacement_column_name})
+    df = df.rename(columns={'species_name':'species'})
+    
+    # create dummies dataframe using .get_dummies(column_name,not dropping any of the dummy columns)
+    dummy_df = pd.get_dummies(df['species'], drop_first=False)
+    
+    # join original df with dummies df using .concat([original_df,dummy_df], join along the index)
+    df = pd.concat([df, dummy_df], axis=1)
+    
+    return df
 
-    # returns the new dataframe with the dummy table attached
-    return pd.concat([df, dummy_sp], axis =1)
 
-
-
+# function to split
+def split_iris_data(df):
+    '''
+    take in a DataFrame and return train, validate, and test DataFrames; stratify on species.
+    return train, validate, test DataFrames.
+    '''
+    
+    # splits df into train_validate and test using train_test_split() stratifying on species to get an even mix of each species
+    train_validate, test = train_test_split(df, test_size=.2, random_state=123, stratify=df.species)
+    
+    # splits train_validate into train and validate using train_test_split() stratifying on species to get an even mix of each species
+    train, validate = train_test_split(train_validate, 
+                                       test_size=.3, 
+                                       random_state=123, 
+                                       stratify=train_validate.species)
+# combined split and clean
 def prep_iris(df):
-    """
-    prep_iris will take one argument(df) and 
-    run clean_iris to remove/rename/encode columns
-    then split our data into 20/80, 
-    then split the 80% into 30/70
+    '''
+    This function will:
+    - drop column: species_id
+    - rename species_name to species
+    - create dummy columns
+    - split the data into train, validate, and test
+    '''
     
-    perform a train, validate, test split
+    # drop column using .drop(columns=column_name)
+    df = df.drop(columns='species_id')
     
-    return: the three split pandas dataframes-train/validate/test
-    """
-    iris_df = clean_iris(df)
-    train_validate, test = train_test_split(iris_df, test_size=0.2, random_state=3210, stratify=iris_df.species)
-    train, validate = train_test_split(train_validate, train_size=0.7, random_state=3210, stratify=train_validate.species)
+    # remame column using .rename(columns={current_column_name : replacement_column_name})
+    df = df.rename(columns={'species_name':'species'})
+    
+    # create dummies dataframe using .get_dummies(column_name,not dropping any of the dummy columns)
+    dummy_df = pd.get_dummies(df['species'], drop_first=False)
+    
+    # join original df with dummies df using .concat([original_df,dummy_df], join along the index)
+    df = pd.concat([df, dummy_df], axis=1)
+    
+    # split data into train/validate/test using split_data function
+    train, validate, test = split_iris_data(df)
+    
     return train, validate, test
 
+#prep iris 2
+def prep_iris_2(iris) -> pd.DataFrame:
+    '''
+    prep_iris will take a single positional argument,
+    a single pandas DataFrame,
+    and will output a cleaned version of the dataframe
+    this is expected to receive the data output by 
+    get_iris_data from acquire module, see documentation
+    for acquire.py for further details
+    return: pd.DataFrame
+    '''
+    # drop that species_id column:
+    iris = iris.drop(columns='species_id')
+    # rename that species_name column into species for cleanliness:
+    iris = iris.rename(columns={'species_name':'species'})
+    return iris
 
 #----------------------------------------------------------------------------------------------#
 # Titanic-data:
 
-def clean_titanic(df):
-    """
-    clean_titanic will take an acquired df and 
-    covert sex column to boolean 'is_female' col
-    encode "embarked" & "class" columns & add them to the end
-    and drop 'age' & 'deck' cols due to NaNs
-    'passenger_id' due to un-necessity
-    'embark_town', 'embarked', 'sex', 'pclass', 'class' due to redundancy/enew encoded cols
-    
-    return: single cleaned dataframe
-    """
-    
-    
-    df["is_female"] = df.sex == "Female"
-    embarked_dummies = pd.get_dummies(df.embarked, prefix='Embarked', drop_first=True)
-    class_dummies = pd.get_dummies(df.pclass, prefix='class', drop_first=True)
+def clean_titanic_data(df):
+    '''
+    This function will clean the data prior to splitting.
+    '''
+    # Drops any duplicate values
+    df = df.drop_duplicates()
 
-    dropcols = ['deck', 'age', 'embark_town', 'passenger_id', 'embarked', 'sex', 'pclass', 'class']
-    df.drop(columns= dropcols, inplace=True)
+    # Drops columns that are already represented by other columns
+    cols_to_drop = ['deck', 'embarked', 'class', 'passenger_id']
+    df = df.drop(columns=cols_to_drop)
 
-    return pd.concat([df, embarked_dummies, class_dummies], axis =1)
+    # Fills the small number of null values for embark_town with the mode
+    df['embark_town'] = df.embark_town.fillna(value='Southampton')
 
+    # Uses one-hot encoding to create dummies of string columns for future modeling 
+    dummy_df = pd.get_dummies(df[['sex', 'embark_town']], dummy_na=False, drop_first=[True])
+    df = pd.concat([df, dummy_df], axis=1)
 
-def prep_titanic(df):
-    """
-    prep_iris will take one argument(df) and 
-    run clean_iris to remove/rename/encode columns
-    then split our data into 20/80, 
-    then split the 80% into 30/70
+    return df
+
+def split_titanic_data(df):
+    '''
+    Takes in a dataframe and return train, validate, test subset dataframes
+    '''
+    # Creates the test set
+    train, test = train_test_split(df, test_size = .2, random_state=123, stratify=df.survived)
     
-    perform a train, validate, test split
+    # Creates the final train and validate set
+    train, validate = train_test_split(train, test_size=.3, random_state=123, stratify=train.survived)
     
-    return: the three split pandas dataframes-train/validate/test
-    """
-    df = clean_titanic(df)
-    train_validate, test = train_test_split(df, test_size=0.2, random_state=3210, stratify=df.survived)
-    train, validate = train_test_split(train_validate, train_size=0.7, random_state=3210, stratify=train_validate.survived)
     return train, validate, test
-    
 
-def prep_titanic_2(titanic) -> pd.DataFrame:
+# age is missing numbers: function to add age mean
+
+def impute_mean_age(train, validate, test):
+    '''
+    This function imputes the mean of the age column for
+    observations with missing values.
+    Returns transformed train, validate, and test df.
+    '''
+    # create the imputer object with mean strategy
+    imputer = SimpleImputer(strategy = 'mean')
+    
+    # fit on and transform age column in train
+    train['age'] = imputer.fit_transform(train[['age']])
+    
+    # transform age column in validate
+    validate['age'] = imputer.transform(validate[['age']])
+    
+    # transform age column in test
+    test['age'] = imputer.transform(test[['age']])
+    
+    return train, validate, test
+
+# combination of clean, split, and impute mean age:
+
+def prep_titanic_data(df):
+    '''
+    Combines the clean_titanic_data, split_titanic_data, and impute_mean_age functions.
+    '''
+    df = clean_titanic_data(df)
+    df = df.drop(columns='sex')
+    df = df.drop(columns='embark_town')
+
+    train, validate, test = split_titanic_data(df)
+    
+    train, validate, test = impute_mean_age(train, validate, test)
+
+    return train, validate, test
+
+
+
+# another prep
+def prep_titanic(titanic) -> pd.DataFrame:
     '''
     prep_titanic will take in a single pandas DataFrame, titanic
     as expected from the acquire.py return of get_titanic_data
@@ -115,6 +188,7 @@ def prep_titanic_2(titanic) -> pd.DataFrame:
     of this titanic data, ready for analysis.
     '''
     titanic = titanic.drop(columns=[
+        'Unnamed: 0',
         'passenger_id',
         'embarked',
         'deck',
@@ -124,11 +198,47 @@ def prep_titanic_2(titanic) -> pd.DataFrame:
     titanic.loc[:, 'embark_town'] = titanic.embark_town.fillna('Southampton')
     return titanic
 
-
-
 #--------------------------------------------------------------------------------------#
 #Telco Data:
-def prep_telco(telco) -> pd.DataFrame:
+
+def split_telco_data(df):
+    '''
+    This function performs split on telco data, stratify churn.
+    Returns train, validate, and test dfs.
+    '''
+    train_validate, test = train_test_split(df, test_size=.2, 
+                                        random_state=1349, 
+                                        stratify=df.Churn)
+    train, validate = train_test_split(train_validate, test_size=.3, 
+                                   random_state=1349, 
+                                   stratify=train_validate.Churn)
+    return train, validate, test
+
+
+
+def prep_telco(df):
+    df['TotalCharges'] = pd.to_numeric(df['TotalCharges'], errors='coerce')
+    df = df.drop(columns=['InternetService', 'Contract', 'PaymentMethod'])
+    df['gender'] = df.gender.map({'Female': 1, 'Male': 0})
+    df['Partner'] = df.Partner.map({'Yes': 1, 'No': 0})
+    df['Dependents'] = df.Dependents.map({'Yes': 1, 'No': 0})
+    df['PhoneService'] = df.PhoneService.map({'Yes': 1, 'No': 0})
+    df['PaperlessBilling'] = df.PaperlessBilling.map({'Yes': 1, 'No': 0})
+    df.TotalCharges.fillna('20.20',inplace=True)
+    df['Churn'] = df.Churn.map({'Yes': 1, 'No': 0})
+    dummy_df = pd.get_dummies(df[['MultipleLines', 'OnlineSecurity','OnlineBackup','DeviceProtection','TechSupport','StreamingTV','StreamingMovies']],
+                              drop_first=True)
+    df = df.drop(columns=['MultipleLines', 'OnlineSecurity','OnlineBackup','DeviceProtection','TechSupport','StreamingTV','StreamingMovies'])
+    df = pd.concat([df, dummy_df], axis=1)
+    
+    # split the data
+    train, validate, test = split_telco_data(df)
+    
+    return train, validate, test
+
+
+
+def prep_telco_2(telco) -> pd.DataFrame:
     '''
     prep_telco will take in a a single pandas dataframe
     presumed of the same structure as presented from 
@@ -151,7 +261,8 @@ def prep_telco(telco) -> pd.DataFrame:
     return telco
 
 
-#to split
+#-----------------------------------------------------------------------------------------#
+#spliting data:
 
 def split_data(df, dataset=None):
     target_cols = {
